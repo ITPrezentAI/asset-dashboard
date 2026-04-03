@@ -4,6 +4,691 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Asset Inventory Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f2;color:#1a1a1a;min-height:100vh}
+:root{--blue:#185FA5;--green:#3B6D11;--amber:#854F0B;--red:#A32D2D;--teal:#0F6E56;--border:#e0ddd6}
+.hidden{display:none!important}
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 2px 24px rgba(0,0,0,.08)}
+.login-box h1{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px}
+.login-box p{font-size:12px;color:#888;text-align:center;margin-bottom:24px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:#555;margin-bottom:5px}
+.pw-wrap{position:relative}
+.pw-wrap input{width:100%;padding:9px 48px 9px 12px}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:11px;color:#888;cursor:pointer}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid #d0cdc6;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+.btn{padding:9px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff;width:100%;margin-top:10px;padding:11px}
+.btn-secondary{background:#f1eee8;border:1px solid #d0cdc6;color:#1a1a1a}
+.btn-danger{background:#FCEBEB;border:1px solid #f0b8b8;color:var(--red)}
+.err{font-size:12px;color:var(--red);margin:6px 0}
+.suc{font-size:12px;color:var(--green);margin:6px 0}
+.link-btn{background:none;border:none;color:var(--blue);font-size:12px;text-decoration:underline;cursor:pointer;font-family:inherit;padding:0}
+/* Header */
+.header{background:#fff;border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header h2{font-size:15px;font-weight:700;flex:1}
+.header-sub{font-size:11px;color:#888;margin-top:2px}
+/* Tabs */
+.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 12px}
+.tab-btn{padding:10px 24px;background:none;border:none;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:#666;cursor:pointer;font-family:inherit}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+/* Import panel */
+.import-panel{background:#fff;border-bottom:1px solid var(--border);padding:16px 20px}
+.import-panel h3{font-size:13px;font-weight:600;margin-bottom:8px}
+.info-box{background:#E6F1FB;border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--blue);margin-bottom:12px;line-height:1.8}
+.info-box a{color:#0F6E56;font-weight:600}
+.import-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.debug-box{margin-top:10px;background:#f5f5f2;border-radius:8px;padding:8px 12px;font-size:11.5px;font-family:monospace;color:#444;line-height:1.8}
+/* Content */
+.content{padding:20px;display:flex;flex-direction:column;gap:16px}
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi-val{font-size:26px;font-weight:700;line-height:1}
+.kpi-label{font-size:12px;color:#888;margin-top:4px}
+.kpi-sub{font-size:11px;margin-top:5px;font-weight:500}
+/* Card */
+.card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px}
+.card-title{font-size:13px;font-weight:600;color:#333;margin-bottom:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-os{display:grid;grid-template-columns:200px 1fr;gap:14px}
+/* Bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:122px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.bar-val{font-size:10px;font-weight:600;color:#555}
+.bar-rect{width:100%;border-radius:3px 3px 0 0}
+.bar-lbl{font-size:10px;color:#888;text-align:center;line-height:1.2;word-break:break-word}
+/* Donut */
+.donut-row{display:flex;align-items:center;gap:14px}
+.legend{display:flex;flex-direction:column;gap:6px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#555}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.legend-val{font-weight:700;color:#333;margin-left:auto;padding-left:8px}
+/* OS bars */
+.os-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.os-label{font-size:12px;color:#555;width:90px;flex-shrink:0}
+.os-bar-wrap{flex:1;height:8px;background:#f0ede6;border-radius:4px;overflow:hidden}
+.os-bar-fill{height:100%;background:#534AB7;border-radius:4px}
+.os-val{font-size:11px;font-weight:700;color:#333;width:20px;text-align:right}
+/* Warranty timeline */
+.wt-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.wt-label{font-size:12px;color:#555;width:200px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wt-bar-wrap{flex:1;height:7px;background:#f0ede6;border-radius:4px;overflow:hidden}
+.wt-bar-fill{height:100%;border-radius:4px}
+.wt-val{font-size:11px;font-weight:500;width:130px;text-align:right}
+/* Matrix table */
+.matrix-wrap{overflow-x:auto}
+.matrix-wrap table{width:100%;border-collapse:collapse;font-size:12.5px}
+.matrix-wrap th{text-align:left;padding:6px 10px;border-bottom:2px solid var(--border);font-weight:500;color:#666}
+.matrix-wrap td{padding:7px 10px;border-bottom:1px solid #f0ede6;text-align:center}
+.matrix-wrap td:first-child{text-align:left;font-weight:500}
+.matrix-wrap tr:hover td{background:#faf9f6}
+/* Badge */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+/* Standby table */
+.tbl-wrap{overflow-x:auto}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl-wrap th{text-align:left;padding:7px 10px;border-bottom:2px solid var(--border);color:#666;font-weight:500;white-space:nowrap}
+.tbl-wrap td{padding:7px 10px;border-bottom:1px solid #f0ede6;vertical-align:middle}
+.tbl-wrap tr:hover td{background:#faf9f6}
+/* Alloc engine */
+.alloc-form{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.alloc-form .form-group{margin-bottom:0}
+.device-info{background:#E6F1FB;border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--blue);margin-bottom:14px;line-height:1.8}
+.result-item{border:1px solid #e0ddd6;border-radius:9px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff}
+.result-item.top1{background:#f6fff6;border-color:#c8c4bc}
+.rank-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.score-bar-wrap{height:5px;background:#e8e5de;border-radius:3px;overflow:hidden;max-width:220px;margin-top:5px}
+.score-bar-fill{height:100%;border-radius:3px}
+/* Modal overlay */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#fff;border-radius:12px;padding:24px;width:420px;max-width:95vw}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+/* Alloc log table */
+.log-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.log-table th{text-align:left;padding:6px 10px;border-bottom:2px solid var(--border);color:#666;font-weight:500}
+.log-table td{padding:7px 10px;border-bottom:1px solid #f0ede6}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-section" class="login-wrap">
+  <div class="login-box">
+    <h1>Asset Dashboard</h1>
+    <p>Sign in to continue</p>
+    <div id="login-form-wrap">
+      <div class="form-group">
+        <label>Username</label>
+        <input id="login-user" type="text" placeholder="Username" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input id="login-pass" type="password" placeholder="Password" autocomplete="current-password"/>
+          <button class="pw-toggle" onclick="togglePw('login-pass',this)">Show</button>
+        </div>
+      </div>
+      <div id="login-err" class="err hidden"></div>
+      <div id="login-suc" class="suc hidden"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
+      <div style="text-align:center;margin-top:14px">
+        <button class="link-btn" onclick="showReset()">Reset password</button>
+      </div>
+    </div>
+    <div id="reset-form-wrap" class="hidden">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px">Reset password</div>
+      <div class="form-group">
+        <label>New password (min 6 chars)</label>
+        <input id="new-pass" type="password" placeholder="New password"/>
+      </div>
+      <div id="reset-err" class="err hidden"></div>
+      <button class="btn btn-primary" onclick="doReset()">Update password</button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="link-btn" onclick="hideReset()">Back to login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app-section" class="hidden">
+  <!-- Header -->
+  <div class="header">
+    <div style="flex:1">
+      <h2>Asset Inventory Dashboard</h2>
+      <div class="header-sub" id="header-sub">No data loaded — paste your CSV below</div>
+    </div>
+    <button class="btn btn-secondary" id="update-btn" onclick="toggleImport()" style="display:none">Update data</button>
+    <button class="btn btn-danger" onclick="doLogout()">Sign out</button>
+  </div>
+
+  <!-- Import Panel -->
+  <div id="import-panel" class="import-panel">
+    <h3>Paste CSV data from Google Sheet</h3>
+    <div class="info-box">
+      <b>Steps:</b> Open <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4Nx3p1zWyHLgN0PPv4mSqXR18ZQd3zcq3nAj3utFp-HxI4_mQ7i6fCGoM9bH9x8kQJD_fXDwjSHAI/pub?gid=1405311158&single=true&output=csv" target="_blank">this CSV link</a> in a new tab → press <b>Ctrl+A</b> then <b>Ctrl+C</b> → paste below → click <b>Load data</b>
+    </div>
+    <textarea id="csv-input" rows="6" placeholder="Paste CSV content here..."></textarea>
+    <div id="csv-stats" style="font-size:11.5px;color:#888;margin-top:4px"></div>
+    <div class="import-actions">
+      <button class="btn btn-primary" style="width:auto" onclick="loadCSV()">Load data</button>
+      <button class="btn btn-secondary" onclick="clearCSV()">Clear</button>
+      <span id="csv-msg" style="font-size:12.5px;font-weight:500"></span>
+    </div>
+    <div id="csv-debug" class="debug-box hidden"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="main-tabs" style="display:none">
+    <button class="tab-btn active" onclick="switchTab(0,this)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab(1,this)">Standby allocation</button>
+  </div>
+
+  <!-- Tab 0: Dashboard -->
+  <div id="tab-0" class="content"></div>
+
+  <!-- Tab 1: Standby -->
+  <div id="tab-1" class="content hidden"></div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirm-modal" class="modal-bg hidden">
+  <div class="modal">
+    <h3>Confirm allocation</h3>
+    <p id="confirm-text" style="font-size:13px;color:#555;line-height:1.7;margin-bottom:16px"></p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" style="background:#3B6D11;color:#fff" onclick="confirmAlloc()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────
+let ADMIN_PASS = "Zent123$";
+let assets = [];
+let allocLog = [];
+let pendingAlloc = null;
+
+// ── Auth ──────────────────────────────────────────────────────────────
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === "password" ? "text" : "password";
+  btn.textContent = el.type === "password" ? "Show" : "Hide";
+}
+function doLogin() {
+  const u = document.getElementById("login-user").value.trim();
+  const p = document.getElementById("login-pass").value;
+  const err = document.getElementById("login-err");
+  if (u === "Admin" && p === ADMIN_PASS) {
+    document.getElementById("login-section").classList.add("hidden");
+    document.getElementById("app-section").classList.remove("hidden");
+    err.classList.add("hidden");
+  } else {
+    err.textContent = "Invalid username or password.";
+    err.classList.remove("hidden");
+  }
+}
+function doLogout() {
+  document.getElementById("app-section").classList.add("hidden");
+  document.getElementById("login-section").classList.remove("hidden");
+  document.getElementById("login-pass").value = "";
+  document.getElementById("login-err").classList.add("hidden");
+}
+function showReset() {
+  document.getElementById("login-form-wrap").classList.add("hidden");
+  document.getElementById("reset-form-wrap").classList.remove("hidden");
+}
+function hideReset() {
+  document.getElementById("reset-form-wrap").classList.add("hidden");
+  document.getElementById("login-form-wrap").classList.remove("hidden");
+  document.getElementById("reset-err").classList.add("hidden");
+}
+function doReset() {
+  const np = document.getElementById("new-pass").value;
+  const err = document.getElementById("reset-err");
+  if (np.length < 6) { err.textContent = "Min 6 characters."; err.classList.remove("hidden"); return; }
+  ADMIN_PASS = np;
+  hideReset();
+  const suc = document.getElementById("login-suc");
+  suc.textContent = "Password updated. Please sign in.";
+  suc.classList.remove("hidden");
+  setTimeout(() => suc.classList.add("hidden"), 4000);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+const today = new Date();
+function ageYears(d) { return d ? (today - new Date(d)) / (365.25 * 86400000) : 0; }
+function daysToExpiry(d) { return d ? Math.ceil((new Date(d) - today) / 86400000) : null; }
+function warrantyStatus(d) { const x = daysToExpiry(d); if (x === null) return "unknown"; if (x < 0) return "expired"; if (x < 90) return "expiring"; return "active"; }
+function ageColor(y) { return y < 1 ? "#3B6D11" : y < 2 ? "#185FA5" : y < 3 ? "#BA7517" : y < 4 ? "#E07000" : "#A32D2D"; }
+const wColor = { active: "#3B6D11", expiring: "#BA7517", expired: "#A32D2D", unknown: "#888" };
+const wBg = { active: "#EAF3DE", expiring: "#FAEEDA", expired: "#FCEBEB", unknown: "#F1EFE8" };
+const stateColorMap = { "In Use": "#185FA5", "In Stock": "#3B6D11", "In Stock-New": "#0F6E56", "Under Repair": "#BA7517", "Retired": "#888", "Disposed": "#A32D2D" };
+const stateBgMap = { "In Use": "#E6F1FB", "In Stock": "#EAF3DE", "In Stock-New": "#d0f5e8", "Under Repair": "#FAEEDA", "Retired": "#F1EFE8", "Disposed": "#FCEBEB" };
+const makeColorMap = { "Dell": "#185FA5", "HP": "#0F6E56", "Lenovo": "#854F0B", "Apple": "#5F5E5A", "Microsoft": "#534AB7" };
+function sc(s) { return stateColorMap[s] || "#888"; }
+function sb(s) { return stateBgMap[s] || "#F1EFE8"; }
+function mc(m) { return makeColorMap[m] || "#888"; }
+function badge(label, color, bg) { return `<span class="badge" style="color:${color};background:${bg}">${label}</span>`; }
+
+function extractMake(r) {
+  const s = (r.model || r.name || r.vendor || "").toLowerCase();
+  if (s.includes("dell")) return "Dell";
+  if (s.includes("hp") || s.includes("elitebook") || s.includes("probook")) return "HP";
+  if (s.includes("lenovo") || s.includes("thinkpad")) return "Lenovo";
+  if (s.includes("apple") || s.includes("macbook") || s.includes("mac")) return "Apple";
+  if (s.includes("microsoft") || s.includes("surface")) return "Microsoft";
+  return r.vendor || "Other";
+}
+function calcWarranty(r) {
+  if (r.warrantyExpiry && r.warrantyExpiry.trim()) return r.warrantyExpiry.trim();
+  if (!r.acquisitionDate) return "";
+  const d = new Date(r.acquisitionDate);
+  if (isNaN(d)) return "";
+  const isMac = (r.os || "").toLowerCase().includes("mac") || (r.model || r.name || "").toLowerCase().includes("mac") || (r.model || r.name || "").toLowerCase().includes("apple");
+  d.setFullYear(d.getFullYear() + (isMac ? 1 : 3));
+  return d.toISOString().split("T")[0];
+}
+function normaliseState(raw) {
+  const s = (raw || "").toLowerCase().trim();
+  if (s.includes("in stock-new") || s === "in stock - new") return "In Stock-New";
+  if (s.includes("new") && s.includes("stock")) return "In Stock-New";
+  if (s.includes("in use") || s.includes("assigned")) return "In Use";
+  if (s.includes("stock") || s.includes("available") || s.includes("spare")) return "In Stock";
+  if (s.includes("repair") || s.includes("maintenance")) return "Under Repair";
+  if (s.includes("retire")) return "Retired";
+  if (s.includes("dispos")) return "Disposed";
+  return raw || "Unknown";
+}
+
+// ── CSV Parser ────────────────────────────────────────────────────────
+const COL_MAP = { "Name": "name", "Asset Tag": "tag", "Location": "location", "Department": "dept", "Used by (Name)": "usedByName", "Managed by (Name)": "managedByName", "Asset State": "state", "Acquisition Date": "acquisitionDate", "Warranty Expiry Date": "warrantyExpiry", "Vendor": "vendor", "Cost": "price", "Product": "model", "OS": "os", "OS Version": "osVersion", "Serial Number": "serial", "Region": "region", "Memory(GB)": "ram", "Disk Space(GB)": "disk" };
+
+function parseCSV(text) {
+  const norm = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = norm.trim().split("\n").filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const first = lines[0];
+  const tabs = (first.match(/\t/g) || []).length;
+  const commas = (first.match(/,/g) || []).length;
+  const semis = (first.match(/;/g) || []).length;
+  let delim = ",";
+  if (tabs >= commas && tabs >= semis) delim = "\t";
+  else if (semis > commas) delim = ";";
+  function splitRow(row) {
+    if (delim === "\t") return row.split("\t").map(v => v.trim().replace(/^"|"$/g, ""));
+    const res = []; let cur = "", inQ = false;
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '"') inQ = !inQ;
+      else if (c === delim && !inQ) { res.push(cur.trim()); cur = ""; }
+      else cur += c;
+    }
+    res.push(cur.trim());
+    return res;
+  }
+  const headers = splitRow(lines[0]).map(h => h.replace(/^\uFEFF/, "").trim());
+  if (headers.length < 2) return [];
+  return lines.slice(1).map((line, idx) => {
+    if (!line.trim()) return null;
+    const vals = splitRow(line), raw = {};
+    headers.forEach((h, i) => { raw[h] = (vals[i] || "").replace(/^"|"$/g, "").trim(); });
+    const row = { id: "R" + idx };
+    Object.entries(COL_MAP).forEach(([col, field]) => { if (raw[col] !== undefined) row[field] = raw[col]; });
+    // Fuzzy fallback
+    if (!row.name) { const k = Object.keys(raw).find(h => /^name$/i.test(h)); if (k) row.name = raw[k]; }
+    if (!row.state) { const k = Object.keys(raw).find(h => /asset.?state/i.test(h)); if (k) row.state = raw[k]; }
+    if (!row.location) { const k = Object.keys(raw).find(h => /location/i.test(h)); if (k) row.location = raw[k]; }
+    if (!row.acquisitionDate) { const k = Object.keys(raw).find(h => /acqui/i.test(h)); if (k) row.acquisitionDate = raw[k]; }
+    if (!row.warrantyExpiry) { const k = Object.keys(raw).find(h => /warranty.expir/i.test(h)); if (k) row.warrantyExpiry = raw[k]; }
+    if (!row.model) { const k = Object.keys(raw).find(h => /product|model/i.test(h)); if (k) row.model = raw[k]; }
+    if (!row.dept) { const k = Object.keys(raw).find(h => /department/i.test(h)); if (k) row.dept = raw[k]; }
+    if (!row.usedByName) { const k = Object.keys(raw).find(h => /used.by.*name/i.test(h)); if (k) row.usedByName = raw[k]; }
+    if (!row.tag) { const k = Object.keys(raw).find(h => /asset.tag/i.test(h)); if (k) row.tag = raw[k]; }
+    row.make = extractMake(row);
+    row.state = normaliseState(row.state);
+    row.warrantyExpiry = calcWarranty(row);
+    return row;
+  }).filter(Boolean).filter(r => r.name || r.tag || r.model);
+}
+
+// ── Import UI ─────────────────────────────────────────────────────────
+document.getElementById("csv-input").addEventListener("input", function () {
+  const text = this.value.trim();
+  if (!text) { document.getElementById("csv-stats").textContent = ""; return; }
+  const norm = text.replace(/\r\n/g, "\n");
+  const first = norm.trim().split("\n")[0] || "";
+  const lines = norm.trim().split("\n").filter(Boolean).length;
+  const tabs = first.split("\t").length, commas = first.split(",").length;
+  document.getElementById("csv-stats").textContent = `Lines: ${lines} · Tab cols: ${tabs} · Comma cols: ${commas}`;
+  document.getElementById("csv-msg").textContent = "";
+  document.getElementById("csv-debug").classList.add("hidden");
+});
+
+function loadCSV() {
+  const text = document.getElementById("csv-input").value.trim();
+  const msgEl = document.getElementById("csv-msg");
+  const debugEl = document.getElementById("csv-debug");
+  if (!text) { msgEl.style.color = "#A32D2D"; msgEl.textContent = "Please paste CSV first."; return; }
+  const norm = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = norm.split("\n").filter(l => l.trim());
+  const first = lines[0] || "";
+  debugEl.innerHTML = `Lines: ${lines.length} | Tab-cols: ${first.split("\t").length} | Comma-cols: ${first.split(",").length}<br>Preview: <span style="color:#185FA5">${first.slice(0, 100)}</span>`;
+  debugEl.classList.remove("hidden");
+  if (lines.length < 2) { msgEl.style.color = "#A32D2D"; msgEl.textContent = "Only 1 line detected."; return; }
+  if (first.startsWith("<")) { msgEl.style.color = "#A32D2D"; msgEl.textContent = "Got HTML — open the URL in browser, Ctrl+A, Ctrl+C."; return; }
+  const parsed = parseCSV(norm);
+  if (parsed.length === 0) { msgEl.style.color = "#A32D2D"; msgEl.textContent = "0 rows parsed. See debug info above."; return; }
+  assets = parsed;
+  msgEl.style.color = "#3B6D11"; msgEl.textContent = `✓ Loaded ${parsed.length} assets.`;
+  document.getElementById("import-panel").classList.add("hidden");
+  document.getElementById("update-btn").style.display = "";
+  document.getElementById("main-tabs").style.display = "";
+  document.getElementById("header-sub").innerHTML = `${assets.length} assets · <span style="color:#3B6D11;font-weight:500">● Live · ${new Date().toLocaleTimeString("en-IN")}</span>`;
+  renderDashboard();
+  renderStandby();
+}
+function clearCSV() { document.getElementById("csv-input").value = ""; document.getElementById("csv-stats").textContent = ""; document.getElementById("csv-msg").textContent = ""; document.getElementById("csv-debug").classList.add("hidden"); }
+function toggleImport() { document.getElementById("import-panel").classList.toggle("hidden"); }
+
+// ── Tab switch ────────────────────────────────────────────────────────
+function switchTab(n, btn) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("tab-0").classList.toggle("hidden", n !== 0);
+  document.getElementById("tab-1").classList.toggle("hidden", n !== 1);
+}
+
+// ── Chart builders ────────────────────────────────────────────────────
+function buildBarChart(data, height = 80) {
+  const max = Math.max(...data.map(d => d.value), 1);
+  return `<div class="bar-chart" style="height:${height + 42}px">${data.map(d => `
+    <div class="bar-col">
+      <span class="bar-val">${d.value}</span>
+      <div class="bar-rect" style="height:${Math.max(4, d.value / max * height)}px;background:${d.color || "#185FA5"}"></div>
+      <span class="bar-lbl">${d.label}</span>
+    </div>`).join("")}</div>`;
+}
+
+function buildDonut(data, size = 110) {
+  const total = data.reduce((s, d) => s + d.value, 0) || 1;
+  let start = -Math.PI / 2;
+  const paths = data.map(d => {
+    const angle = 2 * Math.PI * (d.value / total);
+    const s = start; start += angle;
+    const x1 = size / 2 + (size / 2 - 4) * Math.cos(s), y1 = size / 2 + (size / 2 - 4) * Math.sin(s);
+    const x2 = size / 2 + (size / 2 - 4) * Math.cos(s + angle), y2 = size / 2 + (size / 2 - 4) * Math.sin(s + angle);
+    const large = angle > Math.PI ? 1 : 0;
+    return `<path d="M${size/2},${size/2} L${x1},${y1} A${size/2-4},${size/2-4},0,${large},1,${x2},${y2}Z" fill="${d.color}"/>`;
+  }).join("");
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}<circle cx="${size/2}" cy="${size/2}" r="${size/2-26}" fill="white"/><text x="${size/2}" y="${size/2+1}" text-anchor="middle" dominant-baseline="middle" style="font-size:13px;font-weight:700;fill:#333">${total}</text></svg>`;
+}
+
+// ── Count helper ──────────────────────────────────────────────────────
+function countBy(field) {
+  const m = {};
+  assets.forEach(a => { const v = a[field] || "Unknown"; m[v] = (m[v] || 0) + 1; });
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+
+// ── Render Dashboard ──────────────────────────────────────────────────
+function renderDashboard() {
+  const total = assets.length;
+  const inUse = assets.filter(a => a.state === "In Use").length;
+  const inStock = assets.filter(a => a.state === "In Stock").length;
+  const inStockNew = assets.filter(a => a.state === "In Stock-New").length;
+  const underRepair = assets.filter(a => a.state === "Under Repair").length;
+  const wExpiring = assets.filter(a => warrantyStatus(a.warrantyExpiry) === "expiring").length;
+  const wExpired = assets.filter(a => warrantyStatus(a.warrantyExpiry) === "expired").length;
+  const avgAge = (assets.reduce((s, a) => s + ageYears(a.acquisitionDate), 0) / Math.max(total, 1)).toFixed(1);
+
+  function kpi(label, value, color, sub = "") {
+    return `<div class="kpi"><div class="kpi-val" style="color:${color}">${value}</div><div class="kpi-label">${label}</div>${sub ? `<div class="kpi-sub" style="color:${color}">${sub}</div>` : ""}</div>`;
+  }
+
+  // State donut
+  const stateData = countBy("state").map(([l, v]) => ({ label: l, value: v, color: sc(l) }));
+  const donutSvg = buildDonut(stateData);
+  const legend = stateData.map(d => `<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div><span>${d.label}</span><span class="legend-val">${d.value}</span></div>`).join("");
+
+  // Age buckets
+  const ageBuckets = [["<1y", 0], ["1–2y", 0], ["2–3y", 0], ["3–4y", 0], ["4+y", 0]];
+  const agePalette = ["#3B6D11", "#185FA5", "#BA7517", "#E07000", "#A32D2D"];
+  assets.forEach(a => { const y = ageYears(a.acquisitionDate); if (y < 1) ageBuckets[0][1]++; else if (y < 2) ageBuckets[1][1]++; else if (y < 3) ageBuckets[2][1]++; else if (y < 4) ageBuckets[3][1]++; else ageBuckets[4][1]++; });
+  const ageData = ageBuckets.map(([l, v], i) => ({ label: l, value: v, color: agePalette[i] }));
+
+  // Make
+  const makeData = countBy("make").map(([l, v]) => ({ label: l, value: v, color: mc(l) }));
+  // Location
+  const locData = countBy("location").map(([l, v]) => ({ label: l, value: v, color: "#185FA5" }));
+  // Dept
+  const deptData = countBy("dept").filter(d => d[0] && d[0] !== "Unknown").slice(0, 7).map(([l, v]) => ({ label: l, value: v, color: "#534AB7" }));
+  // OS
+  const osData = countBy("os");
+  const osMax = Math.max(...osData.map(d => d[1]), 1);
+  const osHtml = osData.map(([l, v]) => `<div class="os-row"><span class="os-label">${l}</span><div class="os-bar-wrap"><div class="os-bar-fill" style="width:${v / osMax * 100}%"></div></div><span class="os-val">${v}</span></div>`).join("");
+
+  // Warranty timeline
+  const expiryList = assets.filter(a => a.warrantyExpiry).map(a => ({ ...a, days: daysToExpiry(a.warrantyExpiry) })).filter(a => a.days !== null && a.days < 180).sort((a, b) => a.days - b.days).slice(0, 10);
+  const wtHtml = expiryList.length === 0 ? '<div style="color:#aaa;font-size:13px">No expirations in next 180 days.</div>' :
+    expiryList.map(a => {
+      const col = a.days < 0 ? "#A32D2D" : a.days < 90 ? "#BA7517" : "#3B6D11";
+      const lbl = a.days < 0 ? `Expired ${Math.abs(a.days)}d ago` : `${a.days}d left`;
+      return `<div class="wt-row"><span class="wt-label">${a.model || a.name} — ${a.usedByName || a.tag}</span><div class="wt-bar-wrap"><div class="wt-bar-fill" style="width:${Math.min(Math.abs(a.days) / 180, 1) * 100}%;background:${col}"></div></div><span class="wt-val" style="color:${col}">${lbl}</span></div>`;
+    }).join("");
+
+  // Matrix
+  const locs = [...new Set(assets.map(a => a.location).filter(Boolean))].sort();
+  const states = ["In Use", "In Stock", "In Stock-New", "Under Repair", "Retired"];
+  const matrix = {};
+  assets.forEach(a => { if (!a.location) return; if (!matrix[a.location]) matrix[a.location] = {}; matrix[a.location][a.state] = (matrix[a.location][a.state] || 0) + 1; });
+  const matrixHtml = locs.map(loc => {
+    const row = matrix[loc] || {};
+    const t = Object.values(row).reduce((a, b) => a + b, 0);
+    return `<tr><td>${loc}</td>${states.map(s => `<td>${row[s] ? `<span class="badge" style="color:${sc(s)};background:${sb(s)}">${row[s]}</span>` : '<span style="color:#ccc">—</span>'}</td>`).join("")}<td style="font-weight:700">${t}</td></tr>`;
+  }).join("");
+
+  document.getElementById("tab-0").innerHTML = `
+    <div class="kpi-row">
+      ${kpi("Total assets", total, "#185FA5")}
+      ${kpi("In use", inUse, "#0F6E56")}
+      ${kpi("In stock", inStock, "#3B6D11")}
+      ${kpi("In stock-new", inStockNew, "#0F6E56")}
+      ${kpi("Under repair", underRepair, "#854F0B")}
+      ${kpi("Warranty expiring", wExpiring, "#854F0B", "within 90 days")}
+      ${kpi("Warranty expired", wExpired, "#A32D2D")}
+      ${kpi("Avg fleet age", avgAge + "y", "#185FA5")}
+    </div>
+    <div class="grid-3">
+      <div class="card"><div class="card-title">Asset state</div><div class="donut-row">${donutSvg}<div class="legend">${legend}</div></div></div>
+      <div class="card"><div class="card-title">Fleet age distribution</div>${buildBarChart(ageData, 80)}</div>
+      <div class="card"><div class="card-title">By make / vendor</div>${buildBarChart(makeData, 80)}</div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">By location</div>${buildBarChart(locData, 75)}</div>
+      <div class="card"><div class="card-title">By department (top 7)</div>${buildBarChart(deptData, 75)}</div>
+    </div>
+    <div class="grid-os">
+      <div class="card"><div class="card-title">By OS</div>${osHtml}</div>
+      <div class="card"><div class="card-title">Warranty expiring / expired — next 180 days</div>${wtHtml}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Location × asset state matrix</div>
+      <div class="matrix-wrap">
+        <table>
+          <thead><tr><th>Location</th>${states.map(s => `<th style="color:${sc(s)}">${s}</th>`).join("")}<th style="font-weight:600;color:#333">Total</th></tr></thead>
+          <tbody>${matrixHtml}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ── Scoring ───────────────────────────────────────────────────────────
+function scoreStandby(f, c) {
+  let s = 0;
+  if (c.model && f.model && c.model === f.model) s += 40; else if (c.make && f.make && c.make === f.make) s += 20;
+  if (c.os && f.os && c.os === f.os) s += 20;
+  if (c.ram && f.ram && c.ram === f.ram) s += 10;
+  if (c.disk && f.disk && c.disk === f.disk) s += 5;
+  s -= Math.floor(ageYears(c.acquisitionDate)) * 10;
+  const ws = warrantyStatus(c.warrantyExpiry);
+  if (ws === "active") s += 15; if (ws === "expiring") s += 5; if (ws === "expired") s -= 10;
+  return Math.max(0, s);
+}
+
+// ── Render Standby ────────────────────────────────────────────────────
+function renderStandby() {
+  const inStock = assets.filter(a => a.state === "In Stock" || a.state === "In Stock-New");
+  const inUseUsers = assets.filter(a => a.state === "In Use" && (a.usedByName || a.name));
+  const locations = [...new Set(inStock.map(a => a.location).filter(Boolean))].sort();
+
+  const makes = ["Dell", "HP", "Lenovo", "Apple"];
+  const kpiHtml = `<div class="kpi-row">
+    <div class="kpi"><div class="kpi-val" style="color:#3B6D11">${inStock.length}</div><div class="kpi-label">Total standby</div></div>
+    ${makes.map(m => `<div class="kpi"><div class="kpi-val" style="color:${mc(m)}">${inStock.filter(a => a.make === m).length}</div><div class="kpi-label">Standby — ${m}</div></div>`).join("")}
+  </div>`;
+
+  const sortedStock = [...inStock].sort((a, b) => ageYears(a.acquisitionDate) - ageYears(b.acquisitionDate));
+  const tblRows = sortedStock.map(a => {
+    const age = ageYears(a.acquisitionDate), ws = warrantyStatus(a.warrantyExpiry);
+    return `<tr>
+      <td style="font-family:monospace;font-size:11px">${a.tag}</td>
+      <td style="font-weight:500">${a.model || a.name}</td>
+      <td>${a.make}</td>
+      <td>${a.os || ""}${a.osVersion ? " " + a.osVersion : ""}</td>
+      <td>${a.ram ? a.ram + " GB" : "—"}</td>
+      <td>${a.disk ? a.disk + " GB" : "—"}</td>
+      <td>${a.location}</td>
+      <td style="font-size:11px">${a.acquisitionDate}</td>
+      <td><span style="color:${ageColor(age)};font-weight:600">${age.toFixed(1)}y</span></td>
+      <td>${badge(ws, wColor[ws], wBg[ws])}</td>
+      <td style="font-size:11px;color:#888">${a.warrantyExpiry || "—"}</td>
+    </tr>`;
+  }).join("");
+
+  const userOpts = inUseUsers.map(a => `<option value="${a.id}">${a.usedByName || a.name} — ${a.model || a.name} (${a.location})</option>`).join("");
+  const locOpts = locations.map(l => `<option value="${l}">${l}</option>`).join("");
+
+  document.getElementById("tab-1").innerHTML = `
+    ${kpiHtml}
+    <div class="card">
+      <div class="card-title">All available standby laptops (newest first)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>${["Asset tag","Model","Make","OS","RAM","Disk","Location","Acquired","Age","Warranty","Expiry"].map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+          <tbody>${tblRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Allocate standby laptop</div>
+      <div style="font-size:12px;color:#888;margin-bottom:14px">Select the user whose laptop failed. Newer devices preferred.</div>
+      <div class="alloc-form">
+        <div class="form-group" style="flex:2;min-width:220px">
+          <label>User (hardware failure)</label>
+          <select id="alloc-user" onchange="onUserChange()"><option value="">Select user...</option>${userOpts}</select>
+        </div>
+        <div class="form-group" style="flex:1;min-width:140px">
+          <label>Preferred location</label>
+          <select id="alloc-loc"><option value="">Any location</option>${locOpts}</select>
+        </div>
+        <button class="btn btn-primary" style="width:auto;align-self:flex-end" onclick="findStandby()">Find standby</button>
+      </div>
+      <div id="device-info" class="device-info hidden"></div>
+      <div id="alloc-results"></div>
+    </div>
+    <div id="alloc-log-section" class="card hidden">
+      <div class="card-title">Allocation log</div>
+      <table class="log-table">
+        <thead><tr>${["Date","User","Dept","Failed","Standby","Location","Score"].map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+        <tbody id="alloc-log-body"></tbody>
+      </table>
+    </div>`;
+}
+
+function onUserChange() {
+  const id = document.getElementById("alloc-user").value;
+  const a = assets.find(x => x.id === id);
+  const info = document.getElementById("device-info");
+  if (a) {
+    info.innerHTML = `<b>Current device:</b> ${a.model || a.name} | Make: <b>${a.make}</b> | OS: <b>${a.os || "—"}</b> | RAM: <b>${a.ram ? a.ram + " GB" : "—"}</b> | Age: <b>${ageYears(a.acquisitionDate).toFixed(1)}y</b> | Location: <b>${a.location}</b>`;
+    info.classList.remove("hidden");
+  } else {
+    info.classList.add("hidden");
+  }
+  document.getElementById("alloc-results").innerHTML = "";
+}
+
+function findStandby() {
+  const id = document.getElementById("alloc-user").value;
+  if (!id) { alert("Please select a user."); return; }
+  const failed = assets.find(a => a.id === id);
+  const loc = document.getElementById("alloc-loc").value;
+  const pool = assets.filter(a => (a.state === "In Stock" || a.state === "In Stock-New") && (!loc || a.location === loc));
+  const scored = pool.map(a => ({ ...a, score: scoreStandby(failed, a) })).sort((a, b) => b.score - a.score || ageYears(a.acquisitionDate) - ageYears(b.acquisitionDate));
+  const rankColors = ["#3B6D11", "#185FA5", "#854F0B"];
+  const rankBgs = ["#EAF3DE", "#E6F1FB", "#FAEEDA"];
+  const html = scored.length === 0 ? '<div style="color:#aaa;text-align:center;padding:24px">No standby laptops available.</div>' :
+    scored.map((a, i) => {
+      const age = ageYears(a.acquisitionDate), ws = warrantyStatus(a.warrantyExpiry), isTop = i < 3;
+      return `<div class="result-item${i === 0 ? " top1" : ""}" style="opacity:${a.score === 0 ? 0.55 : 1}">
+        <div class="rank-badge" style="background:${isTop ? rankBgs[i] : "#f1eee8"};color:${isTop ? rankColors[i] : "#888"}">${i + 1}</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:600;font-size:13px">${a.model || a.name}</div>
+          <div style="font-size:11.5px;color:#666;margin-top:2px">${a.make} · ${a.os || ""} · ${a.location} · <span style="color:${ageColor(age)};font-weight:600">${age.toFixed(1)}y</span> · <span style="color:${wColor[ws]}">${ws} warranty</span></div>
+          <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${Math.min(a.score / 90 * 100, 100)}%;background:${rankColors[Math.min(i, 2)] || "#888"}"></div></div>
+          <div style="font-size:10.5px;color:#999;margin-top:2px">Score: ${a.score} · Tag: ${a.tag}</div>
+        </div>
+        ${isTop ? `<button class="btn" style="background:${i===0?"#3B6D11":"#185FA5"};color:#fff;font-size:12px;padding:7px 14px" onclick="openModal('${a.id}')">Allocate</button>` : ""}
+      </div>`;
+    }).join("");
+  document.getElementById("alloc-results").innerHTML = `<div style="font-size:12px;font-weight:600;color:#555;margin-bottom:10px">${scored.length} standby laptops found</div>${html}`;
+}
+
+function openModal(standbyId) {
+  const userId = document.getElementById("alloc-user").value;
+  const user = assets.find(a => a.id === userId);
+  const standby = assets.find(a => a.id === standbyId);
+  pendingAlloc = { userId, standbyId };
+  document.getElementById("confirm-text").innerHTML = `Allocate <b>${standby.model || standby.name}</b> (${standby.tag}) from <b>${standby.location}</b> to <b>${user.usedByName || user.name}</b>?`;
+  document.getElementById("confirm-modal").classList.remove("hidden");
+}
+function closeModal() { document.getElementById("confirm-modal").classList.add("hidden"); pendingAlloc = null; }
+function confirmAlloc() {
+  if (!pendingAlloc) return;
+  const { userId, standbyId } = pendingAlloc;
+  const user = assets.find(a => a.id === userId);
+  const standby = assets.find(a => a.id === standbyId);
+  standby.state = "In Use"; standby.usedByName = user.usedByName || user.name; standby.dept = user.dept;
+  allocLog.unshift({ date: new Date().toLocaleDateString("en-IN"), user: user.usedByName || user.name, dept: user.dept, failedTag: user.tag, standbyTag: standby.tag, standbyModel: standby.model || standby.name, standbyLocation: standby.location, score: standby.score || 0 });
+  closeModal();
+  renderDashboard();
+  renderStandby();
+  // Show log
+  const logSec = document.getElementById("alloc-log-section");
+  logSec.classList.remove("hidden");
+  document.getElementById("alloc-log-body").innerHTML = allocLog.map(r => `<tr><td>${r.date}</td><td style="font-weight:500">${r.user}</td><td>${r.dept || "—"}</td><td style="font-family:monospace;font-size:11px">${r.failedTag}</td><td style="font-family:monospace;font-size:11px">${r.standbyTag}</td><td>${r.standbyLocation}</td><td>${badge(r.score, "#185FA5", "#E6F1FB")}</td></tr>`).join("");
+}
+
+// Enter key on login
+document.getElementById("login-pass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+document.getElementById("login-user").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("login-pass").focus(); });
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Asset Inventory Dashboard</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/htm@3/dist/htm.umd.js"></script>
